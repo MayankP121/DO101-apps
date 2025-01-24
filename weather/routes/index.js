@@ -2,38 +2,50 @@ const express = require('express');
 const router = express.Router();
 const fetch = require("node-fetch");
 require('dotenv').config();
-const OWM_API_KEY = process.env.OWM_API_KEY || 'invalid_key';
-const UNITS = process.env.UNITS || 'metric';
+
+// Corrected environment variable names
+const dbaddc535ae66307eed83c2a90aa625b = process.env.dbaddc535ae66307eed83c2a90aa625b ||'invalid_key';
+const UNITS = process.env.UNITS ||'metric';
 
 /* GET home page. */
-router.get('/', function(req, res) {
-  res.render('index', { weather: null, err: null });
+router.get('/', function (req, res) {
+  res.render('index', { weather: null, error: null });
 });
 
-router.post('/get_weather', async function (req,res) {
+router.post('/get_weather', async function (req, res) {
   let city = req.body.city;
-  let url = `http://api.openweathermap.org/data/2.5/weather?q=${city}&units=${UNITS}&appid=${OWM_API_KEY}`;
+
+  // Dynamically generate URL
+  let url = 'http://api.openweathermap.org/data/2.5/weather?q=London&appid=dbaddc535ae66307eed83c2a90aa625b&units=metric';
 
   try {
-    let data = await fetch(url);
-    let weather = await data.json();
-    console.log(weather);
-    if(weather.cod == '404' && weather.main == undefined) {
-      res.render('index', {weather: null, error: 'Error: Unknown city'});
-    }
-    else if (weather.cod == '401' && weather.main == undefined) {
-      res.render('index', {weather: null, error: 'Error: Invalid API Key. Please see http://openweathermap.org/faq#error401 for more info.'});
-    }
-    else {
-      let unit_hex = (UNITS == 'imperial') ? '&#8457' : '&#8451';
-      res.render('index', {weather: weather, error: null, units: unit_hex});
-    }
-  }
-  catch (err) {
-    console.log(err);
-    res.render('index', {weather: null, error: 'Error: Unable to invoke OpenWeatherMap API'});
-  }
+    let response = await fetch(url);
+    let weather = await response.json();
 
+    // Handle various error scenarios
+    if (weather.cod === '404') {
+      res.render('index', { weather: null, error: 'Error: Unknown city' });
+    } else if (weather.cod === '401') {
+      res.render('index', {
+        weather: null,
+        error: 'Error: Invalid API Key. Please see http://openweathermap.org/faq#error401 for more info.',
+      });
+    } else {
+      // Render weather data
+      let unit_symbol = UNITS === 'imperial' ? '°F' : '°C';
+      res.render('index', {
+        weather: weather,
+        error: null,
+        units: unit_symbol,
+      });
+    }
+  } catch (err) {
+    console.error(err);
+    res.render('index', {
+      weather: null,
+      error: 'Error: Unable to invoke OpenWeatherMap API. Please try again later.',
+    });
+  }
 });
 
 module.exports = router;
